@@ -120,7 +120,7 @@ void setup() {
 }
 
 void loop() {
- 
+  char buffer[10];
   readStoneData();
   int buttonActionT4 = myButtonT4->checkMyButton();
       if(buttonActionT4 > 2)  {  //Si appuyé plus de 0.2 secondes
@@ -138,6 +138,9 @@ void loop() {
             //myStone->writeIt((char*)cmdFormat2);
             if(myStone) myStone->getVersion();
             Serial.print("La température est de : ");
-            Serial.println(myTemp->ReadTemp());
+            float t = myTemp->ReadTemp();
+            Serial.println(t);
+            stringf(buffer, "%4.1f °C", t);
+            myStone->setLabel("temperature", buffer);
           }
   }
