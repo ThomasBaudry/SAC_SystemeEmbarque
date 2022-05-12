@@ -117,7 +117,7 @@ datasRead  MyStone::getValidsDatasIfExists() {
             break;
             };
 
-            case 0x1001: { //Button
+          case 0x1001: { //Button
             int keyValue = (int) data[longeur-1];
             data[longeur-1] = 0x00;
 

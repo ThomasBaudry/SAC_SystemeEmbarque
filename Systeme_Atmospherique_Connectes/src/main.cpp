@@ -46,6 +46,12 @@ MyStone *myStone;
 #include "MyTemp.h"
 MyTemp *myTemp;
 
+int BoutonDemarre = 0;
+float temp = 0;
+float temp_minimal = 25;
+float temps_sechage = 20;
+float nb = 0;
+
 std::string intToHexa(int value){
   char buffer[10];
   sprintf(buffer , "0x%4X", value);
@@ -82,19 +88,19 @@ void readStoneData() {
 
           break;
           }
-      }
-
       case 0x1001: { //Button
           std::cout << "GData : " << intToHexa(abs(rd.id)) << " " << rd.command << " " << rd.name << " " << rd.type << "\n";
-          std::string stoneVersion = rd.name;
-          std::cout << "Button : " <<  stoneVersion.c_str() << "\n";
+          std::string stoneName = rd.name;
+          std::cout << "Button : " <<  stoneName.c_str() << "\n";
 
           //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+          if(strcmp(stoneName.c_str(), "four_demarrage") == 0 && rd.type == 1){ 
+            BoutonDemarre = 1;
+          }
 
           break;
           }
       }
-
   if(rd.id<0) std::cout << "Data received ( id: : " << intToHexa(abs(rd.id)) << "  Command: " << rd.command << " Type: " << rd.type<< ")\n";
 }
 
@@ -117,11 +123,52 @@ void setup() {
   myTemp = new MyTemp();
 
   cout << std::string("Début de l'exemple Stone de base pour le ESP32")  << "\n";
+
+   // Affichage des information relative au bois choisie.
+    myStone->setLabel("label_bois", "Erable");
+    myStone->setLabel("label_type", "Dur");
+    myStone->setLabel("label_origine", "US");
+    char sechage[10];
+    sprintf(sechage, "%4.0f secondes", temps_sechage);
+    myStone->setLabel("label_sechage", sechage);
+    char minimum[10];
+    sprintf(minimum, "%4.1f°C", temp_minimal);
+    myStone->setLabel("label_minimum", minimum);
+
+    //Affichage des information relative du bois dans le four.
+    myStone->setLabel("four_bois", "Erable");
+    myStone->setLabel("four_minimum", "25°C");
+    myStone->setLabel("four_etat", "");
 }
 
 void loop() {
   char buffer[10];
   readStoneData();
+
+  if(BoutonDemarre == 1){
+    if(temp >= temp_minimal*0.90 && temp <= temp_minimal*1.10){
+      while(nb < temps_sechage && (temp >= temp_minimal*0.90 && temp <= temp_minimal*1.10)){
+        delay(1000);
+
+        nb++;
+        char secondes[20];
+        sprintf(secondes, "%4.0f s / %4.0f s", nb, temps_sechage);
+        myStone->setLabel("four_secondes", secondes);
+
+        temp = myTemp->ReadTemp();
+        sprintf(buffer, "%4.1f °C", temp);
+        myStone->setLabel("temperature", buffer);
+      }
+      if(nb < 20){
+        myStone->setLabel("four_etat", "Température trop éloigné.");
+      }else{
+        myStone->setLabel("four_etat", "Cuissson terminé.");
+      }
+      nb = 0;
+    }
+    BoutonDemarre = 0;
+  }
+
   int buttonActionT4 = myButtonT4->checkMyButton();
       if(buttonActionT4 > 2)  {  //Si appuyé plus de 0.2 secondes
             Serial.println("Button T4 pressed");
@@ -138,9 +185,11 @@ void loop() {
             //myStone->writeIt((char*)cmdFormat2);
             if(myStone) myStone->getVersion();
             Serial.print("La température est de : ");
-            float t = myTemp->ReadTemp();
-            Serial.println(t);
-            stringf(buffer, "%4.1f °C", t);
-            myStone->setLabel("temperature", buffer);
+            Serial.println(temp);
           }
+    temp = myTemp->ReadTemp();
+    sprintf(buffer, "%4.1f °C", temp);
+    myStone->setLabel("temperature", buffer);
+
+   
   }
