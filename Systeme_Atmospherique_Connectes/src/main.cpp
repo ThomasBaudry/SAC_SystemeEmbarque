@@ -84,6 +84,17 @@ void readStoneData() {
           }
       }
 
+      case 0x1001: { //Button
+          std::cout << "GData : " << intToHexa(abs(rd.id)) << " " << rd.command << " " << rd.name << " " << rd.type << "\n";
+          std::string stoneVersion = rd.name;
+          std::cout << "Button : " <<  stoneVersion.c_str() << "\n";
+
+          //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+          break;
+          }
+      }
+
   if(rd.id<0) std::cout << "Data received ( id: : " << intToHexa(abs(rd.id)) << "  Command: " << rd.command << " Type: " << rd.type<< ")\n";
 }
 

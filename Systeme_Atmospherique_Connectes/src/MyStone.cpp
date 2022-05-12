@@ -117,6 +117,29 @@ datasRead  MyStone::getValidsDatasIfExists() {
             break;
             };
 
+            case 0x1001: { //Button
+            int keyValue = (int) data[longeur-1];
+            data[longeur-1] = 0x00;
+
+            //Lire les données suivantes : TAIL (3 char ">ET") et CRC (Hexa16)
+            char TailDatas[5];
+             n = mySerial->readIt( TailDatas, 5);
+            //Check if TAIL (>ET) is OK
+            if ((n!=5) || (TailDatas[0]!='>') || (TailDatas[1]!='E') || (TailDatas[2]!='T')) return (rd);
+            //Nous ne vérifions pas le CRC pour plus de rapidité mais ce serait mieux...
+              //Traitement du CRC
+              //int crc = TailDatas[4]; crc <<= 8; crc |= TailDatas[3];
+              //std::cout << "Crc: " << intToString(crc, "%4X") << "\n";
+
+            rd.id = commande;
+            strcpy(rd.command, "Button");
+            strcpy(rd.name, data);
+            rd.type = keyValue;
+
+            return (rd);
+            break;
+            };
+
         default:{
 
             int keyValue = (int) data[longeur-1];
